@@ -1,0 +1,136 @@
+<!doctype html>
+<html>
+<head>
+<title>Node &amp; socket.io chat</title>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+<script src="http://code.jquery.com/jquery-1.7.1.min.js"></script>
+<script src="/socket.io/socket.io.js"></script>
+<script>
+var socket = io.connect();
+socket.on('connect', function () {
+	$('#chat').addClass('connected');
+});
+
+socket.on('announcement', function (msg) {
+	$('#lines').append($('<p>').append($('<em>').text(msg))).get(0).scrollTop = 10000000;
+});
+
+socket.on('nicknames', function (nicknames) {
+	$('#nicknames').empty().append($('<span>접속한사람 : </span>'));
+	for (var i in nicknames) {
+		$('#nicknames').append($('<b>').text(nicknames[i]));
+	}
+});
+
+socket.on('user message', message);
+function message (from, msg) {
+	$('#lines').append($('<p>').append($('<b>').text(from), msg))
+		.get(0).scrollTop = 10000000;
+}
+
+$(function () {
+	$('#set-nickname').submit(function (ev) {
+		socket.emit('nickname', $('input[name="nickname"]').val(), function (set) {
+			if (!set) {
+				clear();
+				$("#set-nickname").hide();
+				$('#chat').show();
+				return $("#message").focus();
+			}
+			$('#nickname-err').css('visibility', 'visible');
+		});
+		return false;
+	});
+
+	$('#send-message').submit(function () {
+		if ( $("#message").val() === "" )
+			return;
+		message('me', $('#message').val());
+		socket.emit('user message', $('#message').val());
+		clear();
+		return false;
+	});
+
+	function clear () {
+		$('#message').val('').focus();
+	};
+});
+</script>
+<style>
+body { 
+	font-family:'Lucida Grande','Arial Narrow','Arial',sans-serif;
+	font-size:12px;
+}
+p {
+	margin:0;
+}
+b { 
+	margin-right:10px;
+}
+#chat {
+	border:1px solid #999;
+	width:400px;
+	height:600px;
+	padding:10px;
+	display:none;
+}
+
+.nickname-set {
+	display:block;
+}
+
+#nicknames {
+	font-size:14px;
+	height:25px;
+	background-color:#ddd;
+	margin-bottom:10px;
+	position:relative;
+	vertical-align:middle;
+	padding:10px;
+}
+
+#nicknames b {
+	font-size:12px;
+	padding : 4px;
+	border-radius:5px;
+	background-color:#aaa;
+	margin-left:5px;
+}
+
+#lines { 
+	height:500px;
+	border:1px solid #ddd;
+	overflow:auto;
+}
+#lines p em {
+	color:green;
+}
+form input[type=text] { 
+	font-size:14px;
+	border:1px solid #ccc;
+	height:22px;
+}
+#message {
+	margin-top:10px;
+	margin-left:-1px;
+}
+
+</style>
+
+</head>
+<body>
+<form id="set-nickname">
+<div>
+	<input type="text" value="" name="nickname" placeholder="닉네임을 입력하세요" size="20"/>
+</div>
+</form>
+<div id="chat">
+	<div id="nicknames">
+	</div>
+	<div id="lines"> </div>
+	<form id="send-message">
+		<input type="text" id="message" placeholder="메시지를 입력하세요" size="62" />
+	</form>
+</div>
+</body>
+</html>
