@@ -21,7 +21,7 @@ var nicknames = {};
 
 // 전체 소켓덜로 처리 
 io.sockets.on('connection', function(socket){
-	// 사용자 채팅 메시지 (public)
+	// 사용자 채팅 메시지 broadcast
 	socket.on('user message',function(msg){
 		socket.broadcast.emit('user message',socket.nickname,msg);
 	});
@@ -33,7 +33,9 @@ io.sockets.on('connection', function(socket){
 		}else {
 			fn(false);
 			nicknames[nick] = socket.nickname = nick;
+			// 사용자 대화창에 알림 broadcast
 			socket.broadcast.emit('announcement', nick + '님 들어오셨습니다.');
+			// 전체 접속사용자 리스트 broadcast
 			socket.broadcast.emit('nicknames', nicknames);
 			socket.emit('nicknames', nicknames);
 		}

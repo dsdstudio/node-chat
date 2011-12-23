@@ -7,14 +7,19 @@
 <script src="/socket.io/socket.io.js"></script>
 <script>
 var socket = io.connect();
+function initChatCallbackMethods(){
+
+}
 socket.on('connect', function () {
 	$('#chat').addClass('connected');
+	message('System', '대화방에 접속되셨습니다.');
 });
 
 socket.on('announcement', function (msg) {
 	$('#lines').append($('<p>').append($('<em>').text(msg))).get(0).scrollTop = 10000000;
 });
 
+// 접속자들 모니터링
 socket.on('nicknames', function (nicknames) {
 	$('#nicknames').empty().append($('<span>접속한사람 : </span>'));
 	for (var i in nicknames) {
@@ -22,7 +27,20 @@ socket.on('nicknames', function (nicknames) {
 	}
 });
 
+// 메시지
 socket.on('user message', message);
+socket.on('reconnect', function () {
+	$('#lines').empty();
+	message('System', 'Reconnected to the server');
+	// 닉네임 다시 설정 
+	socket.emit('nickname', $('input[name="nickname"]').val(), function (set) {
+	});
+});
+
+socket.on('reconnecting', function () {
+	message('System', 'Attempting to re-connect to the server');
+});
+
 function message (from, msg) {
 	$('#lines').append($('<p>').append($('<b>').text(from), msg))
 		.get(0).scrollTop = 10000000;
